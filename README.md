@@ -26,5 +26,15 @@ BACKEND REF DOCS
 
 
 SYSTEM ARCHITECTURE
-- docker commpose starts 6 containers redis,postgres,db-migrate,frontend, api and worker
-- db-migrate container will stop after migration is done
+- docker commpose starts 6 containers redis,postgres,db-migrate,frontend, api and worker. and it also sets up the  
+  env variables in each container
+- db-migrate container will stop after migration is done since its task based and others will keep on running since   
+  they are service based
+- front-end will run on localhost:3000 and backend on localhost:4000
+- frontnd will send api request to localhost:4000 .local host will send request to other containers using dockers 
+  internal network 
+- since frontend is running on client side i.e browser . it doesnt have access to dockers network thus we are 
+  forwwarding request to localhost:4000 for backend access
+
+
+
