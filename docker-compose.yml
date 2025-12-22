@@ -1,0 +1,71 @@
+services:
+  
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+      # https://www.postgresql.org/message-id/CAFOeHx1wpqRLcs8jSDar-Em3F3ogSetV8sJPZnDMEehc_3XWuQ%40mail.gmail.com
+    healthcheck:
+      
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5s
+    ports:
+      - "5432:5432"
+
+  db-migrate:
+    build: ./backend
+    command: npm run db:push
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+       
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+
+  api:
+    build: ./backend
+    
+    command: npm run dev:api
+    
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      REDIS_HOST: redis
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build: ./backend
+    command: npm run dev:worker
+    
+    environment:
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      REDIS_HOST: redis
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:4000
+    ports:
+      - "3000:3000" 
+    depends_on:
+      - api  
