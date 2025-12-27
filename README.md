@@ -1,5 +1,5 @@
 REQUIREMENTS 
-- dockers, node.js installed
+- dockers
 
 RUN
 - create .env file with values
